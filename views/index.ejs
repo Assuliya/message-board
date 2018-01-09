@@ -13,28 +13,35 @@
       <input type="text" name="text">
       <input type="submit" value="Post Message">
     </form>
-    <% for (var x in posts) { %>
-        <h3>Name: <%= posts[x].name %></h3>
-        <h3>Message: <%= posts[x].text %></h3>
-        <h3>Created at: <%= posts[x].createdAt %></h3>
-        <% for (var y in posts[x].comments) { %>
-          <% if (posts[x].comments[y].text && posts[x].comments[y].name) { %>
-            <% if (posts[x].comments[y]._id != posts[x]._id) { %>
-              <p>Name: <%= posts[x].comments[y].name %></p>
-              <p>Comment: <%= posts[x].comments[y].text %></p>
-              <p>Created at: <%= posts[x].comments[y].createdAt %></p>
-              <hr>
+    <% if (typeof(errors) !== 'undefined' ) { %>
+      <% for (const i in errors) { %>
+       <h3><%= errors[i].message %></h3>
+      <% } %>
+      <a href="/">Return</a>
+    <% } else { %>
+      <% for (const x in posts) { %>
+          <h3>Name: <%= posts[x].name %></h3>
+          <h3>Message: <%= posts[x].text %></h3>
+          <h3>Created at: <%= posts[x].createdAt %></h3>
+          <% for (const y in posts[x].comments) { %>
+            <% if (posts[x].comments[y].text && posts[x].comments[y].name) { %>
+              <% if (posts[x].comments[y]._id != posts[x]._id) { %>
+                <p>Name: <%= posts[x].comments[y].name %></p>
+                <p>Comment: <%= posts[x].comments[y].text %></p>
+                <p>Created at: <%= posts[x].comments[y].createdAt %></p>
+                <hr>
+              <% } %>
             <% } %>
           <% } %>
-        <% } %>
-        <form action="/posts/<%= posts[x]._id %>" method="post">
-          Name:
-          <input type="text" name="name">
-          Comment:
-          <input type="text" name="text">
-          <input type="submit" value="Post Comment">
-        </form>
-        <hr>
+          <form action="/posts/<%= posts[x]._id %>" method="post">
+            Name:
+            <input type="text" name="name">
+            Comment:
+            <input type="text" name="text">
+            <input type="submit" value="Post Comment">
+          </form>
+          <hr>
+      <% } %>
     <% } %>
   </body>
 </html>

@@ -1,38 +1,41 @@
-var express = require('express');
-var app = express();
+const express = require('express');
+const app = express();
 
-var mongoose = require('mongoose');
+const mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost/message_board');
 
-var bodyParser = require('body-parser');
+const bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({ extended: true }));
 
-var path = require('path');
+const path = require('path');
 app.use(express.static(path.join(__dirname, './static')));
 
 app.set('views', path.join(__dirname, './views'));
 app.set('view engine', 'ejs');
 
 // define Schema variable
-var Schema = mongoose.Schema;
+const Schema = mongoose.Schema;
+
 // define Post Schema
-var PostSchema = new mongoose.Schema({
- name: {type: String, required: true },
+const PostSchema = new mongoose.Schema({
+ name: {type: String, required: true, minlength: 4 },
  text: {type: String, required: true },
  comments: [{type: Schema.Types.ObjectId, ref: 'Comment'}]
 }, {timestamps: true });
+
+mongoose.model('Post', PostSchema);
+const Post = mongoose.model('Post');
+
+
 // define Comment Schema
-var CommentSchema = new mongoose.Schema({
+const CommentSchema = new mongoose.Schema({
  _post: {type: Schema.Types.ObjectId, ref: 'Post'},
- name: {type: String, required: true },
+ name: {type: String, required: true, minlength: 4 },
  text: {type: String, required: true }
 }, {timestamps: true });
-// set our models by passing them their respective Schemas
-mongoose.model('Post', PostSchema);
+
 mongoose.model('Comment', CommentSchema);
-// store our models in variables
-var Post = mongoose.model('Post');
-var Comment = mongoose.model('Comment');
+const Comment = mongoose.model('Comment');
 
 
 app.get('/', function (req, res){
@@ -45,10 +48,11 @@ app.get('/', function (req, res){
 
 app.post('/posts', function(req, res) {
     console.log("POST DATA", req.body);
-    var post = new Post({name: req.body.name, text: req.body.text});
+    const post = new Post({name: req.body.name, text: req.body.text});
     post.save(function(err) {
       if(err) {
         console.log('Error', err);
+				res.render('index', { errors: post.errors });
       } else {
         console.log('Successfully added a post!');
     res.redirect('/');
@@ -59,14 +63,17 @@ app.post('/posts', function(req, res) {
 app.post('/posts/:id', function (req, res){
   console.log("POST DATA", req.body);
   Post.findOne({_id: req.params.id}, function(err, post){
-         var comment = new Comment(req.body);
+         const comment = new Comment(req.body);
          comment._post = post._id;
          post.comments.push(comment);
          Post.update({ _id: post._id }, { $push: { comments: comment }}, function(err){
            console.log('Post error', err)
 		       });
          comment.save(function(err){
-            if(err) { console.log('Comment error', err); }
+            if(err) {
+              console.log('Comment error', err);
+              res.render('index', { errors: comment.errors });
+            }
             else {
             res.redirect('/');
             }
