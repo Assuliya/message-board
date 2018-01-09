@@ -24,6 +24,7 @@ var PostSchema = new mongoose.Schema({
 // define Comment Schema
 var CommentSchema = new mongoose.Schema({
  _post: {type: Schema.Types.ObjectId, ref: 'Post'},
+ name: {type: String, required: true },
  text: {type: String, required: true }
 }, {timestamps: true });
 // set our models by passing them their respective Schemas
@@ -35,7 +36,7 @@ var Comment = mongoose.model('Comment');
 
 
 app.get('/', function (req, res){
- Post.find()
+ Post.find({}, false, true)
  .populate('comments')
  .exec(function(err, posts) {
       res.render('index', {posts: posts});
@@ -47,28 +48,32 @@ app.post('/posts', function(req, res) {
     var post = new Post({name: req.body.name, text: req.body.text});
     post.save(function(err) {
       if(err) {
-        console.log('something went wrong');
+        console.log('Error', err);
       } else {
-        console.log('successfully added a post!');
+        console.log('Successfully added a post!');
     res.redirect('/');
         }
     })
 })
 
-// route for creating one comment with the parent post id
 app.post('/posts/:id', function (req, res){
+  console.log("POST DATA", req.body);
   Post.findOne({_id: req.params.id}, function(err, post){
          var comment = new Comment(req.body);
          comment._post = post._id;
          post.comments.push(comment);
+         Post.update({ _id: post._id }, { $push: { comments: comment }}, function(err){
+           console.log('Post error', err)
+		       });
          comment.save(function(err){
-                 post.save(function(err){
-                       if(err) { console.log('Error'); }
-                       else { res.redirect('/'); }
-                 });
+            if(err) { console.log('Comment error', err); }
+            else {
+            res.redirect('/');
+            }
          });
-   });
  });
+});
+
 
 app.listen(8000, function() {
     console.log("listening on port 8000");
